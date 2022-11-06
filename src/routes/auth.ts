@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import fetch from "node-fetch";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
+import { authenticate } from "../plugins/authenticate";
 
 export async function authRoutes(fastify: FastifyInstance) {
   fastify.post("/auth", async (request, reply) => {
@@ -61,4 +62,14 @@ export async function authRoutes(fastify: FastifyInstance) {
 
     return reply.status(201).send({ token });
   });
+
+  fastify.get(
+    "/me",
+    {
+      onRequest: [authenticate],
+    },
+    async (request, reply) => {
+      return { user: request.user };
+    }
+  );
 }
