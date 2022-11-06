@@ -147,4 +147,50 @@ export async function pollsRoutes(fastify: FastifyInstance) {
       return reply.status(200).send({ polls });
     }
   );
+
+  fastify.get(
+    "/pools/:id",
+    {
+      onRequest: [authenticate],
+    },
+    async (request, reply) => {
+      const getPollParams = z.object({
+        id: z.string(),
+      });
+
+      const { id } = getPollParams.parse(request.params);
+
+      const poll = await prisma.pool.findUnique({
+        where: {
+          id,
+        },
+        include: {
+          _count: {
+            select: {
+              participants: true,
+            },
+          },
+          participants: {
+            select: {
+              id: true,
+              user: {
+                select: {
+                  avatarUrl: true,
+                },
+              },
+            },
+            take: 4,
+          },
+          owner: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
+
+      return reply.status(200).send({ poll });
+    }
+  );
 }
